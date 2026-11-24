@@ -153,6 +153,26 @@ dl.mandat{display:grid; grid-template-columns:1fr 1fr; gap:2px 14px; margin:0}
 .kv dd{font-weight:600}
 
 footer#note{max-width:1360px; margin:0 auto 24px; padding:0 16px; font-size:13px; color:var(--muted)}
+#v-sub-grid{display:block}
+/* Paralleles Arbeiten ab Tablet: Ergebnis links, Gespräch als feste rechte Spalte */
+body.dev-tablet #v-vorgang.on, body.dev-desktop #v-vorgang.on{display:grid; grid-template-columns:minmax(0,1fr) 330px; gap:0 14px; align-items:start}
+body.dev-desktop #v-vorgang.on{grid-template-columns:minmax(0,1fr) 380px}
+body.dev-tablet #v-sub-grid, body.dev-desktop #v-sub-grid{grid-column:1/-1}
+body.dev-tablet #s-gespraech, body.dev-desktop #s-gespraech{display:block; grid-column:2; grid-row:2; position:sticky; top:8px; max-height:640px; overflow-y:auto}
+body.dev-tablet #s-ergebnis, body.dev-tablet #s-quellen, body.dev-tablet #s-aktivitaet,
+body.dev-desktop #s-ergebnis, body.dev-desktop #s-quellen, body.dev-desktop #s-aktivitaet{grid-column:1; grid-row:2}
+body.dev-tablet #vsub [data-sub="gespraech"], body.dev-desktop #vsub [data-sub="gespraech"]{display:none}
+
+/* Breit-Vergleich: zwei Fassungen nebeneinander (nur Tablet/Desktop) */
+.wide-compare{display:none}
+body.dev-tablet .wide-compare, body.dev-desktop .wide-compare{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+.wide-compare .col{border:1px solid var(--line); border-radius:8px; padding:10px 12px; font-size:13px}
+.wide-compare .col h4{font-size:13px; margin-bottom:6px; display:flex; gap:6px; align-items:center; flex-wrap:wrap}
+.wide-compare .diffline{padding:4px 0; border-bottom:1px dashed var(--line)}
+.wide-compare .diffline:last-child{border-bottom:none}
+.wide-compare .old{color:var(--muted); text-decoration:line-through}
+.wide-compare .new{color:var(--ok); font-weight:600}
+
 .anim{transition:background .4s}
 #contnote{display:none; background:var(--ok-bg); border:1px solid var(--ok); color:var(--ok); border-radius:var(--radius); padding:8px 14px; font-size:13px; margin:0 16px}
 #contnote.on{display:block}
@@ -249,12 +269,12 @@ footer#note{max-width:1360px; margin:0 auto 24px; padding:0 16px; font-size:13px
 
       <!-- VORGANG -->
       <section class="view on" id="v-vorgang">
-        <div id="vsub" role="tablist" aria-label="Vorgangs-Ansichten">
+        <div id="vsub" role="tablist" aria-label="Vorgangs-Ansichten"><div id="v-sub-grid" style="display:flex;gap:6px;flex-wrap:wrap">
           <button data-sub="gespraech" aria-current="true" onclick="sub('gespraech')">Gespräch</button>
           <button data-sub="ergebnis" aria-current="false" onclick="sub('ergebnis')">Ergebnis</button>
           <button data-sub="quellen" aria-current="false" onclick="sub('quellen')">Quellen</button>
           <button data-sub="aktivitaet" aria-current="false" onclick="sub('aktivitaet')">Aktivität</button>
-        </div>
+        </div></div>
 
         <!-- GESPRÄCH -->
         <div class="vsubpane on" id="s-gespraech">
@@ -334,8 +354,25 @@ footer#note{max-width:1360px; margin:0 auto 24px; padding:0 16px; font-size:13px
               <span class="badge b-ents">Variante B · Start erst Q2</span>
             </div>
             <p class="hint">Annahmen getrennt: Variante B verschiebt die Einführung ins nächste Quartal — Lizenzkosten Jahr 1 entfallen zur Hälfte, Risikoposition „Personalverfügbarkeit“ steigt.</p>
+            <div class="wide-compare" id="variantcompare">
+              <div class="col">
+                <h4><span class="badge b-bestaetigt">Fassung 1</span> Start Q1</h4>
+                <div class="diffline"><span class="new">Kosten 3 Jahre: 37.200 / 38.700 / 38.900 €</span></div>
+                <div class="diffline">Lizenz Jahr 1: voll anlaufend</div>
+                <div class="diffline">Risiko Personal: mittel</div>
+                <div class="diffline">Empfehlung: Alpha</div>
+              </div>
+              <div class="col">
+                <h4><span class="badge b-ents">Variante B</span> Start Q2</h4>
+                <div class="diffline">Kosten 3 Jahre: <span class="old">38.700 € (Beta)</span> <span class="new">35.550 €</span></div>
+                <div class="diffline">Lizenz Jahr 1: <span class="old">voll</span> <span class="new">halbiert (Q2-Start)</span></div>
+                <div class="diffline">Risiko Personal: <span class="old">mittel</span> <span class="new">hoch — Team ab April gebunden</span></div>
+                <div class="diffline">Empfehlung: <span class="old">Alpha</span> <span class="new">offen — Risikoposition prüfen</span></div>
+              </div>
+            </div>
             <div class="row">
               <button class="btn-s" onclick="alertDemo('Variante übernehmen wäre der nächste Schritt: vorher wird gezeigt, welche Fassung die Zustimmung hatte.')">Variante B übernehmen</button>
+              <button class="btn-s" onclick="alertDemo('In der echten App: Spaltenbreiten veränderbar, beide Fassungen scrollbar synchron.')">Größen verändern</button>
             </div>
           </div>
           <div class="card approve" id="sharecard" hidden>
@@ -478,7 +515,14 @@ let curSub='gespraech';
 function sub(s){
   curSub=s;
   document.querySelectorAll('.vsubpane').forEach(p=>p.classList.remove('on'));
-  document.getElementById('s-'+s).classList.add('on');
+  const wide=document.body.className.indexOf('mobile')===-1;
+  /* Im Breit-Layout ist das Gespräch immer sichtbar (rechte Spalte) */
+  if(wide){
+    document.getElementById('s-'+(s==='gespraech'?'ergebnis':s)).classList.add('on');
+    if(s!=='gespraech') document.getElementById('s-'+s).classList.add('on');
+  } else {
+    document.getElementById('s-'+s).classList.add('on');
+  }
   document.querySelectorAll('#vsub [data-sub]').forEach(b=>b.setAttribute('aria-current', b.dataset.sub===s ? 'true':'false'));
 }
 function go(view,s){ nav(view); if(s) sub(s); }
@@ -487,9 +531,14 @@ let lastDevice=null;
 function setDevice(d){
   document.body.className='dev-'+d;
   ['mob','tab','desk'].forEach(x=>document.getElementById('d-'+x).setAttribute('aria-pressed', d.startsWith(x)?'true':'false'));
+  /* Ab Tablet: Gespräch ist fix rechts — linke Spalte braucht einen sinnvollen Inhalt */
+  if(d!=='mobile' && curSub==='gespraech'){ sub('ergebnis'); }
   if(lastDevice && lastDevice!==d){
     const n=document.getElementById('contnote');
-    n.classList.add('on'); setTimeout(()=>n.classList.remove('on'),4000);
+    n.textContent = d==='mobile'
+      ? 'Gerätewechsel: derselbe Vorgang, derselbe Bearbeitungsstand — eine aktive Fläche, Tabs wechseln Gespräch/Ergebnis/Quellen.'
+      : 'Gerätewechsel: derselbe Vorgang, mehr Platz — Ergebnis links, Gespräch jetzt DA NEBEN statt hinter einem Tab. Paralleles Arbeiten statt Umschalten (Abschnitt 10: „Mehr Raum ermöglicht paralleles Arbeiten“).';
+    n.classList.add('on'); setTimeout(()=>n.classList.remove('on'),5000);
   }
   lastDevice=d;
 }
