@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BTM.ONE · Zielbild-Demo</title>
+<style>
+:root{
+  --navy:#16323F; --petrol:#1F6F6B; --petrol-d:#17514E; --amber:#B26A00; --amber-bg:#FFF4E0;
+  --bg:#F4F6F7; --surface:#FFFFFF; --line:#DCE3E6; --ink:#1C2B33; --muted:#5A6B74;
+  --ok:#2E7D4F; --ok-bg:#E7F3EB; --warn-bg:#FDECEC; --warn:#B33636; --radius:10px;
+}
+*{box-sizing:border-box; margin:0; padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; background:#E8ECEE; color:var(--ink)}
+button{font:inherit; cursor:pointer; min-height:44px; min-width:44px; border-radius:var(--radius); border:1px solid var(--line); background:var(--surface); color:var(--ink); padding:10px 14px}
+button:focus-visible,a:focus-visible{outline:3px solid var(--petrol); outline-offset:2px}
+.btn-p{background:var(--petrol); border-color:var(--petrol-d); color:#fff; font-weight:600}
+.btn-p:hover{background:var(--petrol-d)}
+.btn-s{background:transparent; border-color:var(--petrol); color:var(--petrol)}
+.hint{font-size:13px; color:var(--muted)}
+.badge{display:inline-block; padding:2px 10px; border-radius:999px; font-size:12px; font-weight:600; white-space:nowrap}
+.b-entwurf{background:#EDF1F3; color:var(--muted)}
+.b-lauft{background:var(--ok-bg); color:var(--ok)}
+.b-ents{background:var(--amber-bg); color:var(--amber)}
+.b-angefragt{background:#EDF1F3; color:var(--navy)}
+.b-bestaetigt{background:var(--ok-bg); color:var(--ok)}
+
+/* ---------- Demo-Shell ---------- */
+#demobar{background:var(--navy); color:#EAF2F4; padding:10px 16px; display:flex; flex-wrap:wrap; gap:10px; align-items:center; position:sticky; top:0; z-index:50}
+#demobar .brand{font-weight:700; letter-spacing:.5px}
+#demobar .brand small{display:block; font-weight:400; font-size:11px; color:#9FBAC2}
+#devswitch{display:flex; gap:6px; margin-left:auto}
+#devswitch button{min-height:36px; padding:4px 12px; font-size:14px; border-color:#315A6B; background:transparent; color:#CFE0E4}
+#devswitch button[aria-pressed="true"]{background:var(--petrol); border-color:var(--petrol); color:#fff}
+#demobar .disclaimer{flex-basis:100%; font-size:12px; color:#9FBAC2}
+
+#frame{margin:16px auto; background:var(--bg); border:1px solid var(--line); border-radius:18px; overflow:hidden; box-shadow:0 10px 30px rgba(22,50,63,.15); transition:max-width .25s ease}
+body.dev-mobile #frame{max-width:400px}
+body.dev-tablet #frame{max-width:900px}
+body.dev-desktop #frame{max-width:1360px}
+
+#app{display:grid; min-height:560px}
+body.dev-mobile #app{grid-template-columns:1fr; grid-template-rows:auto 1fr auto}
+body.dev-tablet #app, body.dev-desktop #app{grid-template-columns:210px 1fr; grid-template-rows:auto 1fr}
+
+/* Topbar des Vorgangs */
+#topbar{grid-column:1/-1; background:var(--surface); border-bottom:1px solid var(--line); padding:12px 16px; display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+#topbar h1{font-size:17px; font-weight:650}
+#topbar .sub{font-size:12px; color:var(--muted); flex-basis:100%}
+
+/* Seitennavigation */
+nav#sidenav{background:var(--surface); border-right:1px solid var(--line); padding:12px; display:none; flex-direction:column; gap:6px}
+body.dev-tablet #sidenav, body.dev-desktop #sidenav{display:flex}
+nav#sidenav .sec{font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin:10px 4px 2px}
+nav#sidenav button{ text-align:left; border-color:transparent; background:transparent}
+nav#sidenav button[aria-current="true"]{background:var(--petrol); color:#fff; font-weight:600}
+
+/* Bottom-Tabs mobil */
+#tabbar{grid-column:1/-1; background:var(--surface); border-top:1px solid var(--line); display:flex; justify-content:space-around; padding:4px}
+body.dev-tablet #tabbar, body.dev-desktop #tabbar{display:none}
+#tabbar button{flex:1; border:none; background:transparent; flex-direction:column; gap:2px; display:flex; align-items:center; font-size:11px; padding:8px 2px; min-height:52px}
+#tabbar button[aria-current="true"]{color:var(--petrol); font-weight:700}
+
+main{padding:16px; overflow-y:auto}
+.view{display:none}
+.view.on{display:block}
+
+/* Vorgangs-Ansichten (Gespräch/Ergebnis/Quellen/Aktivität) */
+#vsub{display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap}
+#vsub button{min-height:36px; padding:5px 12px; font-size:14px; border-radius:999px}
+#vsub button[aria-current="true"]{background:var(--navy); border-color:var(--navy); color:#fff}
+.vsubpane{display:none}
+.vsubpane.on{display:block}
+
+.card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:14px 16px; margin-bottom:12px}
+.card h3{font-size:15px; margin-bottom:8px; display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+.card p{margin-bottom:8px}
+.card .row{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px}
+
+/* Chat */
+.msg{max-width:85%; margin-bottom:10px; padding:10px 14px; border-radius:14px}
+.msg.user{margin-left:auto; background:var(--petrol); color:#fff; border-bottom-right-radius:4px}
+.msg.bot{background:var(--surface); border:1px solid var(--line); border-bottom-left-radius:4px}
+.msg .meta{font-size:11px; color:var(--muted); margin-top:4px}
+.msg.user .meta{color:#CFE9E6}
+.rec-dot{display:inline-block; width:9px; height:9px; border-radius:50%; background:var(--warn); margin-right:6px; animation:pulse 1.2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.rec-dot{animation:none}}
+
+/* Tabelle */
+table{width:100%; border-collapse:collapse; font-size:14px; background:var(--surface)}
+th,td{border:1px solid var(--line); padding:9px 10px; text-align:left; vertical-align:top}
+th{background:#EDF1F3; font-size:13px}
+tbody th{font-weight:600; white-space:nowrap}
+td.num{text-align:right; font-variant-numeric:tabular-nums}
+td.clickable{cursor:pointer}
+td.clickable:hover{background:var(--amber-bg)}
+td.affected{background:var(--amber-bg); box-shadow:inset 0 0 0 2px var(--amber)}
+td.recalc{background:var(--ok-bg); box-shadow:inset 0 0 0 2px var(--ok)}
+.tblwrap{overflow-x:auto; border-radius:var(--radius); border:1px solid var(--line)}
+td .src{display:block; font-size:11px; color:var(--muted); margin-top:2px}
+
+/* Quelle */
+.srcpill{display:inline-flex; align-items:center; gap:6px; background:var(--surface); border:1px solid var(--line); border-radius:999px; padding:4px 12px; font-size:13px; margin:2px 4px 2px 0}
+.srcpill .dot{width:8px; height:8px; border-radius:50%; background:var(--petrol)}
+.srcpill.stale .dot{background:var(--amber)}
+
+/* Use-Case-Wahl */
+#ucsel{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px}
+#ucsel button{border-radius:999px; padding:8px 16px}
+#ucsel button[aria-current="true"]{background:var(--navy); color:#fff; border-color:var(--navy); font-weight:600}
+
+/* Fortschritt (keine Prozent!) */
+.phase{display:flex; align-items:center; gap:10px; padding:7px 0; font-size:14px}
+.phase .ph-dot{width:12px; height:12px; border-radius:50%; border:2px solid var(--line); flex:none}
+.phase.done .ph-dot{background:var(--ok); border-color:var(--ok)}
+.phase.run .ph-dot{border-color:var(--petrol); background:var(--petrol); animation:pulse 1.2s infinite}
+@media (prefers-reduced-motion:reduce){.phase.run .ph-dot{animation:none}}
+
+/* Entscheidungskarten */
+.ask{border-left:4px solid var(--amber); background:var(--amber-bg)}
+.ask .opts{display:flex; flex-wrap:wrap; gap:8px; margin-top:8px}
+.change{border-left:4px solid var(--petrol)}
+.change .diff{font-family:ui-monospace,Menlo,Consolas,monospace; font-size:13px; background:#F4F8F8; padding:8px 10px; border-radius:6px; margin:8px 0}
+.approve{border-left:4px solid var(--ok)}
+.statechain{display:flex; flex-wrap:wrap; gap:6px; align-items:center; font-size:13px; margin:8px 0}
+.statechain .sep{color:var(--muted)}
+
+/* Mandat */
+.mandat dt{font-size:12px; color:var(--muted); margin-top:8px}
+.mandat dd{font-weight:600}
+dl.mandat{display:grid; grid-template-columns:1fr 1fr; gap:2px 14px; margin:0}
+@media (max-width:420px){dl.mandat{grid-template-columns:1fr}}
+
+/* Vorgänge-Liste */
+.vlist-item{display:flex; gap:10px; align-items:flex-start; padding:12px; border-bottom:1px solid var(--line)}
+.vlist-item:last-child{border-bottom:none}
+.vlist-item .t{flex:1}
+.vlist-item .t strong{display:block; font-size:15px}
+.vlist-item .t span{font-size:12px; color:var(--muted)}
+.filters{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px}
+.filters button{min-height:34px; font-size:13px; padding:4px 12px; border-radius:999px}
+.filters button[aria-pressed="true"]{background:var(--amber-bg); border-color:var(--amber); color:var(--amber); font-weight:600}
+
+/* Übung / Lernen */
+.rubrik li{margin:4px 0 4px 18px}
+.karte dt{font-weight:600; margin-top:8px}
+.karte dd{margin-left:0; color:var(--muted); font-size:14px}
+
+.kv{display:grid; grid-template-columns:auto 1fr; gap:4px 12px; font-size:14px}
+.kv dt{color:var(--muted)}
+.kv dd{font-weight:600}
+
+footer#note{max-width:1360px; margin:0 auto 24px; padding:0 16px; font-size:13px; color:var(--muted)}
+.anim{transition:background .4s}
+#contnote{display:none; background:var(--ok-bg); border:1px solid var(--ok); color:var(--ok); border-radius:var(--radius); padding:8px 14px; font-size:13px; margin:0 16px}
+#contnote.on{display:block}
+.skipnote{font-size:12px; color:var(--muted); margin-top:6px}
+</style>
+</head>
+<body class="dev-mobile">
+
+<div id="demobar">
+  <div class="brand">BTM.ONE<small>Zielbild-Demo · 24.11.2026 · v1.0</small></div>
+  <div id="devswitch" role="group" aria-label="Gerät wählen">
+    <button id="d-mob" aria-pressed="true" onclick="setDevice('mobile')">📱 Mobil</button>
+    <button id="d-tab" aria-pressed="false" onclick="setDevice('tablet')">📊 Tablet</button>
+    <button id="d-desk" aria-pressed="false" onclick="setDevice('desktop')">🖥️ Desktop</button>
+  </div>
+  <div class="disclaimer">Interaktive statische Demo mit Beispieldaten. Kein reales Produkt: alle Werte, Quellen und Zustände sind simuliert und demonstrieren das Zielbild aus dem Anforderungskonzept (24.11.2026). Kein KI-Dienst aktiv, keine Datenübertragung.</div>
+</div>
+
+<div id="contnote" role="status">Gerätewechsel: derselbe Vorgang, derselbe Bearbeitungsstand — nur mehr Platz. Kontinuität ist Teil des Konzepts (Abschnitt 10/21).</div>
+
+<div id="frame">
+  <div id="app">
+    <div id="topbar">
+      <span aria-hidden="true">🧭</span>
+      <h1 id="vorgang-title">Entscheidung: Anbieterauswahl KI-Tooling</h1>
+      <span class="badge b-ents" id="vorgang-state">Entscheidung erforderlich</span>
+      <div class="sub" id="vorgang-sub">Vorgang V-2026-0412 · gestartet auf Smartphone, hier fortgesetzt · Fassung 1 freigegeben · Variante B in Arbeit</div>
+    </div>
+
+    <nav id="sidenav" aria-label="Hauptnavigation">
+      <div class="sec">Arbeit</div>
+      <button data-nav="start" aria-current="false">🏠 Start</button>
+      <button data-nav="vorgaenge" aria-current="false">🗂️ Vorgänge</button>
+      <div class="sec">Vorgang</div>
+      <button data-nav="vorgang" aria-current="true">🧩 Entscheidung Anbieter</button>
+      <div class="sec">Wissen</div>
+      <button data-nav="wissen" aria-current="false">📚 Wissen</button>
+      <div class="sec">Wachsen</div>
+      <button data-nav="lernen" aria-current="false">🎓 Lernen</button>
+    </nav>
+
+    <main>
+      <!-- START -->
+      <section class="view" id="v-start">
+        <div class="card">
+          <h3>Womit beginnen?</h3>
+          <p>Sprechen, schreiben, etwas zeigen oder einen Auftrag delegieren. Kein Profil, keine Kontoverbindung nötig.</p>
+          <div class="row">
+            <button class="btn-p" onclick="go('vorgang','gespraech')">🎙️ Auftrag sprechen</button>
+            <button onclick="go('vorgang','gespraech')">⌨️ Text schreiben</button>
+            <button onclick="alertDemo()">📎 Datei zeigen</button>
+          </div>
+          <div class="row">
+            <div class="srcpill"><span class="dot"></span>Letzter Vorgang: Anbieterauswahl · läuft</div>
+            <div class="srcpill"><span class="dot" style="background:var(--amber)"></span>2 offene Entscheidungen</div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Entscheidungsfach</h3>
+          <div class="vlist-item" style="padding-left:0">
+            <div class="t"><strong>3-Jahres-Blick bestätigen?</strong><span>Änderungsvorschlag betrifft Kalkulation und Empfehlung · heute 14:20</span></div>
+            <button class="btn-s" onclick="go('vorgang','ergebnis')">Ansehen</button>
+          </div>
+          <div class="vlist-item" style="padding-left:0">
+            <div class="t"><strong>Team-Freigabe: Entscheidungsvorlage</strong><span>Empfänger + Inhalt sichtbar vor Versand · wartet</span></div>
+            <button class="btn-s" onclick="go('vorgang','aktivitaet')">Prüfen</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- VORGÄNGE -->
+      <section class="view" id="v-vorgaenge">
+        <div class="filters" role="group" aria-label="Filter">
+          <button aria-pressed="false" onclick="filterV(this,'ents')">Braucht meine Entscheidung</button>
+          <button aria-pressed="false" onclick="filterV(this,'run')">Läuft weiter</button>
+          <button aria-pressed="false" onclick="filterV(this,'team')">Für das Team bereit</button>
+          <button aria-pressed="true" onclick="filterV(this,'all')">Alle</button>
+        </div>
+        <div class="card" style="padding:0" id="vlist">
+          <div class="vlist-item" data-f="ents">
+            <div class="t"><strong>Entscheidung: Anbieterauswahl KI-Tooling</strong><span>V-2026-0412 · Variante B offen, Fassung 1 freigegeben · Variante B betroffen von 3-Jahres-Blick</span></div>
+            <span class="badge b-ents">Entscheidung</span>
+          </div>
+          <div class="vlist-item" data-f="run">
+            <div class="t"><strong>Wochenreport: 3 Quellen konsolidieren</strong><span>W-V07 · Mandat läuft · nächste Ausführung Fr 09:00 · Budget 0,80 € / Lauf</span></div>
+            <span class="badge b-lauft">Läuft</span>
+          </div>
+          <div class="vlist-item" data-f="team">
+            <div class="t"><strong>Wissensübergabe Onboarding Vertrieb</strong><span>V-2026-0389 · Vorlage freigegeben, Übung generiert · 4 Quellen, 2 bestätigte Bausteine</span></div>
+            <span class="badge b-bestaetigt">Bestätigt</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- VORGANG -->
+      <section class="view on" id="v-vorgang">
+        <div id="vsub" role="tablist" aria-label="Vorgangs-Ansichten">
+          <button data-sub="gespraech" aria-current="true" onclick="sub('gespraech')">Gespräch</button>
+          <button data-sub="ergebnis" aria-current="false" onclick="sub('ergebnis')">Ergebnis</button>
+          <button data-sub="quellen" aria-current="false" onclick="sub('quellen')">Quellen</button>
+          <button data-sub="aktivitaet" aria-current="false" onclick="sub('aktivitaet')">Aktivität</button>
+        </div>
+
+        <!-- GESPRÄCH -->
+        <div class="vsubpane on" id="s-gespraech">
+          <div class="card">
+            <h3>Use Case 1 · Vom gesprochenen Auftrag zur Entscheidungsvorlage</h3>
+            <p class="hint">Klicke dich durch den Ablauf. Jeder Schritt zeigt ein Konzept des Zielbilds: gezielte Rückfrage, Fortschritt ohne fake Prozent, Änderung am konkreten Gegenstand, Variante, Freigabe.</p>
+            <div id="chat">
+              <div class="msg user"><span class="rec-dot" aria-hidden="true"></span>„Bereite die Entscheidung zwischen diesen drei Anbietern vor. Nutze die freigegebenen Angebote und unsere Anforderungen. Erstelle eine Vergleichstabelle und eine kurze Vorlage fürs Team.“<div class="meta">Spracheingabe · 09:41 Smartphone</div></div>
+              <div class="msg bot">Verstandenen Auftrag anzeigen?<div class="meta">BTM.ONE · erkannt: Ziel, 3 Quellen, 1 Ergebnisformat</div></div>
+            </div>
+            <div class="row">
+              <button class="btn-p" id="stepbtn" onclick="step()">Weiter: Auftrag erkannt</button>
+              <button onclick="alertDemo()">⏹️ Stoppen</button>
+            </div>
+            <p class="skipnote">Stoppen unterscheidet später: Erzeugung beenden · ausstehende Aktion verhindern · Ausgang prüfen.</p>
+          </div>
+        </div>
+
+        <!-- ERGEBNIS -->
+        <div class="vsubpane" id="s-ergebnis">
+          <div class="card">
+            <h3>Vergleichstabelle <span class="badge b-entwurf">Entwurf · Fassung 1 freigegeben</span></h3>
+            <p class="hint">Tippe auf eine Kostenzelle und „sprich“ die Korrektur — BTM.ONE rechnet betroffene Werte neu und schlägt textliche Folgen vor.</p>
+            <div class="tblwrap">
+              <table id="cmp">
+                <caption class="hint" style="text-align:left;padding:8px">Anbieterauswahl KI-Tooling · Kalkulationsstand 24.11.2026, 14:20 · Quellen je Zelle verknüpft</caption>
+                <thead>
+                  <tr><th scope="col">Kriterium</th><th scope="col">Anbieter Alpha</th><th scope="col">Anbieter Beta</th><th scope="col">Anbieter Gamma</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th scope="row">Einführungskosten</th>
+                    <td class="num clickable" tabindex="0" role="button" data-k="alpha" onclick="selectCell(this)" onkeydown="if(event.key==='Enter')selectCell(this)">12.000 €<span class="src">Angebot A S.4</span></td>
+                    <td class="num clickable" tabindex="0" role="button" data-k="beta" onclick="selectCell(this)" onkeydown="if(event.key==='Enter')selectCell(this)">18.000 €<span class="src">Angebot B S.2</span></td>
+                    <td class="num clickable" tabindex="0" role="button" data-k="gamma" onclick="selectCell(this)" onkeydown="if(event.key==='Enter')selectCell(this)">9.500 €<span class="src">Angebot G S.7</span></td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Lizenz / Jahr</th>
+                    <td class="num">8.400 €<span class="src">Angebot A S.5</span></td>
+                    <td class="num">6.900 €<span class="src">Angebot B S.3</span></td>
+                    <td class="num">9.800 €<span class="src">Angebot G S.8</span></td>
+                  </tr>
+                  <tr id="row3y" style="display:none">
+                    <th scope="row">Kosten über 3 Jahre</th>
+                    <td class="num recalc" data-3y="alpha">37.200 €</td>
+                    <td class="num recalc" data-3y="beta">38.700 €</td>
+                    <td class="num recalc" data-3y="gamma">38.900 €</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">DSGVO-Auftragsverarbeitung</th>
+                    <td>ja · AVV liegt vor<span class="src">Angebot A Anl.2</span></td>
+                    <td>ja · AVV liegt vor<span class="src">Angebot B Anl.1</span></td>
+                    <td>unklar — Anfrage offen<span class="src">E-Mail G 21.11.</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="row" id="sprichrow" hidden>
+              <button class="btn-p" onclick="speakCorrection()">🎙️ „Diese Einführungskosten fallen nur einmal an. Berücksichtige das über drei Jahre.“</button>
+            </div>
+          </div>
+          <div class="card change" id="propose" hidden>
+            <h3>Änderungsvorschlag <span class="badge b-ents">prüfen</span></h3>
+            <p>Betroffen: Kosten über 3 Jahre (alle Anbieter, neu berechnet) · Empfehlung Absatz 3 · Folie 4 „Budgetwicklung“.</p>
+            <div class="diff">Empfehlung: „Beta ist über drei Jahre am günstigsten“ → „Alpha liegt über drei Jahre am günstigsten; Beta bleibt bei kürzerer Betrachtung vorn.“</div>
+            <p class="hint">Berechenbare Werte wurden neu berechnet. Textliche Schlussfolgerungen erscheinen als Vorschlag — nicht automatisch übernommen.</p>
+            <div class="row">
+              <button class="btn-p" onclick="acceptPropose()">Annehmen</button>
+              <button onclick="dismissPropose()">Verwerfen</button>
+              <button onclick="alertDemo()">Versionen vergleichen</button>
+            </div>
+          </div>
+          <div class="card" id="variantcard" hidden>
+            <h3>Varianten <span class="badge b-entwurf">Fassung 1 (freigegeben) bleibt erhalten</span></h3>
+            <div class="statechain">
+              <span class="badge b-bestaetigt">Fassung 1 · freigegeben</span><span class="sep">↔</span>
+              <span class="badge b-ents">Variante B · Start erst Q2</span>
+            </div>
+            <p class="hint">Annahmen getrennt: Variante B verschiebt die Einführung ins nächste Quartal — Lizenzkosten Jahr 1 entfallen zur Hälfte, Risikoposition „Personalverfügbarkeit“ steigt.</p>
+            <div class="row">
+              <button class="btn-s" onclick="alertDemo('Variante übernehmen wäre der nächste Schritt: vorher wird gezeigt, welche Fassung die Zustimmung hatte.')">Variante B übernehmen</button>
+            </div>
+          </div>
+          <div class="card approve" id="sharecard" hidden>
+            <h3>Für das Team freigeben</h3>
+            <dl class="kv">
+              <dt>Empfänger</dt><dd>Team Einkauf (4 Personen, Rolle: Lesen + Kommentieren)</dd>
+              <dt>Inhalt</dt><dd>Entscheidungsvorlage Fassung 1 + Tabelle mit 3-Jahres-Blick</dd>
+              <dt>Externe Freigabe</dt><dd>nein — bleibt im Arbeitsraum</dd>
+            </dl>
+            <div class="statechain">
+              <span class="badge b-lauft">Entwurf fertig</span><span class="sep">→</span>
+              <span class="badge b-angefragt" id="sharestate">Ausführung angefragt</span><span class="sep">→</span>
+              <span class="badge" style="background:#EDF1F3;color:var(--muted)">Bestätigt (ausstehend)</span>
+            </div>
+            <p class="hint">Zustände sind getrennt: Dokument kann fertig sein, während Speicherung/ Versand noch läuft.</p>
+            <div class="row">
+              <button class="btn-p" onclick="confirmShare()">Freigabe ausführen</button>
+            </div>
+          </div>
+          <div class="card" id="templatecard" hidden>
+            <h3>Vorlage sichern <span class="badge b-bestaetigt">Bestätigt</span></h3>
+            <p>„Anbieter-Vergleich mit 3-Jahres-Blick“ — mit Eingaben, Schritten, Ergebnissen und Grenzen. Wiederholungen starten mit aktuellem Kontext und gültigen Berechtigungen.</p>
+            <div class="row">
+              <button class="btn-s" onclick="go('lernen','')">🎓 Übung fürs Lernen erzeugen</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- QUELLEN -->
+        <div class="vsubpane" id="s-quellen">
+          <div class="card">
+            <h3>Quellen dieses Vorgangs</h3>
+            <p class="hint">Jede Aussage ist der Quelle zugeordnet; Veröffentlichungs- und Abrufstand sind dokumentiert.</p>
+            <span class="srcpill"><span class="dot"></span>Angebot_Alpha.pdf · Abruf 20.11.2026</span>
+            <span class="srcpill"><span class="dot"></span>Angebot_Beta.pdf · Abruf 20.11.2026</span>
+            <span class="srcpill stale"><span class="dot"></span>Angebot_Gamma.pdf · Abruf 18.11.2026 — Preisliste überarbeitet, neue Fassung ungeprüft</span>
+            <span class="srcpill"><span class="dot"></span>Anforderungen_Intern.md · Fassung 3</span>
+            <div class="card" style="margin-top:12px; background:var(--amber-bg); border-color:var(--amber)">
+              <h3><span class="badge b-ents">Widerspruch erkannt</span></h3>
+              <p>Angebot Gamma nennt in Anhang C abweichende Supportkosten. Betroffen: Tabelle Zelle „Lizenz/Jahr Gamma“ und Empfehlung Absatz 3. Ursache: geänderte Preisliste des Anbieters.</p>
+              <div class="row"><button class="btn-s" onclick="go('vorgang','ergebnis')">Betroffene Stelle ansehen</button></div>
+            </div>
+            <p class="hint" style="margin-top:8px">Keine flächendeckende Aktualitätsüberwachung — nur ausgewählte Quellen werden beobachtet, und das wird so angezeigt.</p>
+          </div>
+        </div>
+
+        <!-- AKTIVITÄT -->
+        <div class="vsubpane" id="s-aktivitaet">
+          <div class="card">
+            <h3>Aktivität · Zustände getrennt</h3>
+            <div class="phase done"><span class="ph-dot"></span>Auftrag angenommen (serverseitig) · 09:41</div>
+            <div class="phase done"><span class="ph-dot"></span>3 Quellen ausgewertet · 09:44</div>
+            <div class="phase done"><span class="ph-dot"></span>Vergleichstabelle erstellt · 09:52</div>
+            <div class="phase run"><span class="ph-dot"></span>Rückfrage DSGVO Gamma — Anfrage läuft</div>
+            <div class="phase"><span class="ph-dot"></span>Entscheidungsvorlage — wartet auf Bestätigung der 3-Jahres-Kalkulation</div>
+            <div class="row">
+              <button onclick="alertDemo()">⏸️ Pausieren</button><button onclick="alertDemo()">Ergänzen</button><button onclick="alertDemo()">Abbrechen</button>
+            </div>
+            <p class="hint">Fortschritt zeigt bekannte Phasen und tatsächliche Ergebnisse. Unbelegte Prozentanzeigen und fingierte Restzeiten sind ausgeschlossen.</p>
+          </div>
+          <div class="card">
+            <h3>Ausgeführte Handlungen</h3>
+            <dl class="kv">
+              <dt>Team-Freigabe</dt><dd><span class="badge b-angefragt">Ausführung angefragt</span> — Bestätigung steht aus</dd>
+              <dt>Delegation „Wochenreport“</dt><dd><span class="badge b-lauft">Läuft</span> — im Mandat, nächste Ausführung Fr 09:00</dd>
+            </dl>
+          </div>
+        </div>
+      </section>
+
+      <!-- WISSEN -->
+      <section class="view" id="v-wissen">
+        <div class="card">
+          <h3>Use Case 3 · Persönliche Karte &amp; Wissen mit Herkunft</h3>
+          <dl class="kv karte" style="border:0">
+            <dt>Karte · Präferenzen (gepflegt, freiwillig)</dt><dd>kurze Absätze, Tabellen vor Fließtext, Fridays ruhig,Deutsch</dd>
+            <dt>Bestätigter Baustein</dt><dd>„De-minimis-Grenze im Einkauf“ · Quelle: interne Schulung 2026 · letzte Prüfung 02.11.2026 · Geltung: Einkauf DE</dd>
+            <dt>Baustein (Vermutung)</dt><dd>„Gamma Support 24/7“ · unbestätigt — Widerspruch erkannt</dd>
+          </dl>
+          <p class="hint">Grenzen erkennbar: persönlich (Karte) · projektbezogen (Vorgang) · organisationseigene Inhalte. Vermutungen bleiben von bestätigten Angaben unterscheidbar.</p>
+        </div>
+        <div class="card">
+          <h3>Wiederverwendung</h3>
+          <span class="srcpill">Vorlage „Anbieter-Vergleich 3-Jahres-Blick“ · 2 Verwendungen</span>
+          <span class="srcpill">Methode „Kosten über Nutzungsdauer glätten“ · 5 Verwendungen</span>
+          <p class="hint">Kontextpaket für Zusammenarbeit: Zweck, Empfänger, erlaubte Informationen, erwartetes Ergebnis — Kundendaten werden nicht automatisch geteilt.</p>
+        </div>
+      </section>
+
+      <!-- LERNEN -->
+      <section class="view" id="v-lernen">
+        <div class="card">
+          <h3>Use Case 4 · Aus guter Arbeit wird eine Fähigkeit</h3>
+          <p>Aus der schwierigen Bewertung („Einführungskosten über Nutzungsdauer glätten“) wurde eine Übung mit neuem Fall erzeugt:</p>
+          <div class="card" style="background:var(--bg)">
+            <h3>Übung: Leasing oder Kauf?</h3>
+            <p class="hint">Neuer Fall: Kopierpark für 40 Mitarbeiter, zwei Angebote. Dieselbe Methode wie im Vorgang, unbekannte Zahlen.</p>
+            <ul class="rubrik">
+              <li>3-Jahres-Kosten je Option korrekt berechnet</li>
+              <li>Einmalkosten von laufenden korrekt getrennt</li>
+              <li>Annahmen benannt und begründet</li>
+            </ul>
+            <div class="row">
+              <button class="btn-s" onclick="alertDemo('Selbst lösen mit Feedback — die dritte Lernform. Fertige Wissenskarte ist noch kein Können: die neue Aufgabe zählt.')">Selbst lösen</button>
+              <button onclick="alertDemo()">Gemeinsam erarbeiten</button>
+              <button onclick="alertDemo()">Nur kurz erklären</button>
+            </div>
+          </div>
+          <p class="hint">Drei Lernformen frei wählbar. Lerninhalte aus vertraulicher Arbeit bleiben im zulässigen Datenraum.</p>
+        </div>
+      </section>
+    </main>
+
+    <div id="tabbar" role="tablist" aria-label="Hauptnavigation">
+      <button data-nav="start" aria-current="false" onclick="nav('start')"><span aria-hidden="true">🏠</span>Start</button>
+      <button data-nav="vorgaenge" aria-current="false" onclick="nav('vorgaenge')"><span aria-hidden="true">🗂️</span>Vorgänge</button>
+      <button data-nav="vorgang" aria-current="true" onclick="nav('vorgang')"><span aria-hidden="true">🧩</span>Vorgang</button>
+      <button data-nav="wissen" aria-current="false" onclick="nav('wissen')"><span aria-hidden="true">📚</span>Wissen</button>
+      <button data-nav="lernen" aria-current="false" onclick="nav('lernen')"><span aria-hidden="true">🎓</span>Lernen</button>
+    </div>
+  </div>
+</div>
+
+<footer id="note">Demo zum Anforderungskonzept „BTM.ONE — Produktvision und Anforderungskonzept für eine adaptive PWA“ (24.11.2026, v1.0). Dargestellt: Abschnitt 4 (Szenario), 5 (Vorgang), 6 (Oberfläche), 7 (Interaktivität), 9 (Vision), 10 (320px-Vertrag, Gerätewechsel), 13/14 (Mandat, Zustände), 16 (Proaktivität, Lernen). Erstellt als statische Klick-Demo — Layout funktioniert ab 320 CSS-Pixel, Touch-Ziele ≥ 44px, Prozentanzeigen bewusst ausgeschlossen.</footer>
+
+<script>
+function alertDemo(msg){
+  alert(msg || 'In der echten App: geprüfte Aktion mit Zustands-Rückmeldung. In dieser Demo bewusst nur angedeutet — keine simulierten Fähigkeiten, die das Konzept versprechen würde.');
+}
+/* Navigation */
+function nav(view){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+  document.getElementById('v-'+view).classList.add('on');
+  document.querySelectorAll('[data-nav]').forEach(b=>b.setAttribute('aria-current', b.dataset.nav===view ? 'true':'false'));
+  if(view==='vorgang') sub(curSub||'gespraech');
+}
+document.querySelectorAll('#sidenav [data-nav]').forEach(b=>b.addEventListener('click',()=>nav(b.dataset.nav)));
+/* Vorgangs-Unteransichten */
+let curSub='gespraech';
+function sub(s){
+  curSub=s;
+  document.querySelectorAll('.vsubpane').forEach(p=>p.classList.remove('on'));
+  document.getElementById('s-'+s).classList.add('on');
+  document.querySelectorAll('#vsub [data-sub]').forEach(b=>b.setAttribute('aria-current', b.dataset.sub===s ? 'true':'false'));
+}
+function go(view,s){ nav(view); if(s) sub(s); }
+/* Gerät */
+let lastDevice=null;
+function setDevice(d){
+  document.body.className='dev-'+d;
+  ['mob','tab','desk'].forEach(x=>document.getElementById('d-'+x).setAttribute('aria-pressed', d.startsWith(x)?'true':'false'));
+  if(lastDevice && lastDevice!==d){
+    const n=document.getElementById('contnote');
+    n.classList.add('on'); setTimeout(()=>n.classList.remove('on'),4000);
+  }
+  lastDevice=d;
+}
+/* Use-Case-Skript (Gespräch) */
+let stepNo=0;
+const steps=[
+ {btn:'Rückfrage beantworten', add:(()=>{
+   const d=document.createElement('div');
+   d.className='msg bot';
+   d.innerHTML='Eine Anforderung fehlt: <strong>Wie hoch darf das Gesamtbudget über 3 Jahre sein?</strong><div class="meta">Gezielte Klärung vor Beginn — keine 10-Fragen-Formularwüste</div>';
+   const a=document.createElement('div'); a.className='ask'; a.style.maxWidth='85%'; a.style.margin='0 0 10px auto';
+   a.innerHTML='<strong>Antwort:</strong><div class="opts"><button class="btn-s" onclick="pickBudget(this,\'bis 60.000 €\')">bis 60.000 €</button><button class="btn-s" onclick="pickBudget(this,\'offen\')">offen — alle Optionen zeigen</button></div>';
+   return ()=>{chat.append(d,a);};
+ })()},
+ {btn:'Fortschritt ansehen', add:(()=>{
+   const d=document.createElement('div');
+   d.className='msg bot';
+   d.innerHTML='Verstanden. Budgetrahmen notiert.<div class="meta">Arbeit läuft serverseitig weiter — Fenster schließen unterbricht sie nicht</div>';
+   return ()=>{chat.append(d); go('vorgang','aktivitaet'); stepbtn.textContent='Ergebnis öffnen'; stepNo=3;};
+ })()},
+];
+function step(){
+  const chat=document.getElementById('chat'), stepbtn=document.getElementById('stepbtn');
+  if(stepNo===0){
+    stepNo=1;
+    const d=document.createElement('div'); d.className='msg bot';
+    d.innerHTML='<strong>Erkannter Auftrag</strong><br>Ziel: Anbieterentscheidung mit Team-Vorlage · Quellen: 3 freigegebene Angebote + Anforderungsliste · Ergebnisse: Vergleichstabelle, Vorlage<div class="meta">Vor reversible Vorarbeiten: eine entscheidende Anforderung wird geklärt</div>';
+    chat.append(d);
+    stepbtn.textContent='Rückfrage beantworten';
+    return;
+  }
+  if(stepNo===1){ steps[0].add(); stepbtn.textContent='Arbeit starten'; stepNo=2; return; }
+  if(stepNo===2){ steps[1].add(); return; }
+  if(stepNo===3){ go('vorgang','ergebnis'); stepbtn.textContent='Zelle in der Tabelle antippen'; stepNo=4; return; }
+  if(stepNo===4){ alertDemo('Tipp: Tippe eine „Einführungskosten“-Zelle an — dann erscheint der Sprech-Button.'); }
+}
+function pickBudget(btn,val){
+  const chat=document.getElementById('chat');
+  const d=document.createElement('div'); d.className='msg user';
+  d.textContent='Budgetrahmen: '+val;
+  chat.append(d);
+  document.getElementById('stepbtn').textContent='Fortschritt ansehen';
+  stepNo=2;
+}
+/* Zelle → Korrektur → Vorschlag */
+let selCell=null;
+function selectCell(td){
+  document.querySelectorAll('#cmp td').forEach(t=>t.style.outline='');
+  selCell=td;
+  td.style.outline='3px solid var(--petrol)'; td.style.outlineOffset='-3px';
+  document.getElementById('sprichrow').hidden=false;
+  const y=td.getBoundingClientRect().top+window.scrollY-120; window.scrollTo({top:y,behavior:'smooth'});
+}
+function speakCorrection(){
+  const chat=document.getElementById('chat');
+  const m=document.createElement('div'); m.className='msg user';
+  m.innerHTML='„Diese Einführungskosten fallen nur einmal an. Berücksichtige das über drei Jahre.“<div class="meta">Bezug: markierte Zelle — gesprochene Korrektur gilt dem ausgewählten Gegenstand</div>';
+  chat.append(m);
+  /* betroffene Zellen markieren */
+  document.querySelectorAll('#cmp td[data-k]').forEach(t=>{ t.classList.add('affected'); });
+  document.getElementById('row3y').style.display='';
+  document.querySelectorAll('#cmp td[data-3y]').forEach(t=>t.classList.remove('recalc'));
+  document.getElementById('propose').hidden=false;
+  document.getElementById('sprichrow').hidden=true;
+  document.getElementById('stepbtn').parentElement.parentElement.style.display='none';
+  go('vorgang','ergebnis');
+}
+function acceptPropose(){
+  document.getElementById('propose').innerHTML='<h3>Änderung angenommen <span class="badge b-bestaetigt">Bestätigt</span></h3><p>3-Jahres-Blick ist Teil der freigegebenen Kalkulation. Empfehlung Absatz 3 aktualisiert; Version 1.1 mit Vergleich zur Vorgängerversion dokumentiert.</p>';
+  document.getElementById('variantcard').hidden=false;
+  document.getElementById('sharecard').hidden=false;
+  document.getElementById('vorgang-state').className='badge b-angefragt'; document.getElementById('vorgang-state').textContent='Ausführung angefragt';
+}
+function dismissPropose(){ document.getElementById('propose').hidden=true; }
+function confirmShare(){
+  const st=document.getElementById('sharestate');
+  st.className='badge b-bestaetigt'; st.textContent='Bestätigt';
+  document.getElementById('vorgang-state').className='badge b-bestaetigt'; document.getElementById('vorgang-state').textContent='Für Team bereit';
+  document.getElementById('templatecard').hidden=false;
+  st.scrollIntoView({behavior:'smooth',block:'center'});
+}
+/* Vorgänge-Filter */
+function filterV(btn,f){
+  document.querySelectorAll('.filters button').forEach(b=>b.setAttribute('aria-pressed',b===btn?'true':'false'));
+  document.querySelectorAll('#vlist .vlist-item').forEach(i=>{
+    i.style.display=(f==='all'||i.dataset.f===f)?'flex':'none';
+  });
+}
+</script>
+</body>
+</html>
